@@ -104,26 +104,26 @@ def get_friend_list(user_id,screen_name,oauth,maxFriend = 5000):
 def setup_oauth():
     """Authorize your app via identifier."""
     # Request token
-    oauth = OAuth1(CONSUMER_KEY, client_secret=CONSUMER_SECRET)
-    r = requests.post(url=REQUEST_TOKEN_URL, auth=oauth)
+    oauth = OAuth1(config.CONSUMER_KEY, client_secret=config.CONSUMER_SECRET)
+    r = requests.post(url=config.REQUEST_TOKEN_URL, auth=oauth)
     credentials = parse_qs(r.content)
 
     resource_owner_key = credentials.get('oauth_token')[0]
     resource_owner_secret = credentials.get('oauth_token_secret')[0]
 
     # Authorize
-    authorize_url = AUTHORIZE_URL + resource_owner_key
+    authorize_url = config.AUTHORIZE_URL + resource_owner_key
     print 'Please go here and authorize: ' + authorize_url
 
     verifier = raw_input('Please input the verifier: ')
-    oauth = OAuth1(CONSUMER_KEY,
-                   client_secret=CONSUMER_SECRET,
+    oauth = OAuth1(config.CONSUMER_KEY,
+                   client_secret=config.CONSUMER_SECRET,
                    resource_owner_key=resource_owner_key,
                    resource_owner_secret=resource_owner_secret,
                    verifier=verifier)
 
     # Finally, Obtain the Access Token
-    r = requests.post(url=ACCESS_TOKEN_URL, auth=oauth)
+    r = requests.post(url=config.ACCESS_TOKEN_URL, auth=oauth)
     credentials = parse_qs(r.content)
     token = credentials.get('oauth_token')[0]
     secret = credentials.get('oauth_token_secret')[0]
@@ -153,8 +153,8 @@ def tester(user_id,screen_name):
 # user_id = '359965206'
 # screen_name = 'derinbadrasli'
 
-user_id = '545918705'
-screen_name = 'XL_ReTweeT'
+# user_id = '545918705'
+# screen_name = 'XL_ReTweeT'
 
-tester(user_id,screen_name)
+# tester(user_id,screen_name)
 
