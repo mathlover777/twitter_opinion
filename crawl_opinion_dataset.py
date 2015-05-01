@@ -7,7 +7,7 @@ def clean_tweet_text(tweettext):
 
 def append_tweets_to_file(tweet_list):
 	with open(config.TWEET_STORAGE_SHEET, 'ab') as csvfile:
-		csvwriter = csv.writer(csvfile, delimiter=' ',quotechar='|', quoting=csv.QUOTE_MINIMAL,dialect='excel')
+		csvwriter = csv.writer(csvfile, delimiter='|',quotechar='\'', quoting=csv.QUOTE_MINIMAL,dialect='excel')
 		for tweet in tweet_list:
 			# print tweet
 			csvwriter.writerow(tweet)
@@ -35,13 +35,13 @@ def get_recent_tweets(keywords,since_id = None):
 		# this is where the fun actually starts :)
 		for tweet in ts.search_tweets_iterable(tso):
 			# print( '@%s %s tweeted: %s' % ( str(i), tweet['user']['screen_name'], tweet['text'].encode('ascii', 'ignore') ) )
-			tweetresults = tweetresults + [[
-				str(tweet['user']['id']).encode('ascii', 'ignore'),
-				tweet['user']['screen_name'].encode('ascii', 'ignore'),
-				clean_tweet_text(tweet['text'].encode('ascii', 'ignore')),
-				str(tweet['id']).encode('ascii', 'ignore'),
-				tweet['created_at'].encode('ascii', 'ignore')
-				]]
+			tweetresults = tweetresults + [[	
+				str(tweet['id']),
+				str(tweet['created_at']),
+				str(tweet['user']['id']),
+				str(tweet['user']['screen_name']),
+				str(clean_tweet_text(tweet['text'].encode('ascii', 'ignore')))	
+			]]
 			max_id = max(max_id,int(tweet['id']))
 			tweets_retrieved = tweets_retrieved + 1
 			if(tweets_retrieved  % 100 == 0):
