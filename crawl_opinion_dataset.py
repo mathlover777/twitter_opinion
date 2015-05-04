@@ -2,6 +2,7 @@ from TwitterSearch import *
 import config
 import csv
 import calendar
+import time
 
 def clean_tweet_text(tweettext):
 	return tweettext.replace('|',' ').replace('\n',' ')
@@ -21,6 +22,7 @@ def append_tweets_to_file(tweet_list,file_to_store = None):
 def get_recent_tweets(keywords,since_id = None,max_id = None,until = None,max_tweet_count = None,file_to_store = None):
 	max_id_retrieved = 0
 	tweets_retrieved = 0
+	least_id_retrieved = None
 	tweetresults = []
 	try:
 		tso = TwitterSearchOrder() # create a TwitterSearchOrder object
@@ -57,19 +59,37 @@ def get_recent_tweets(keywords,since_id = None,max_id = None,until = None,max_tw
 				str(tweet['user']['screen_name']),
 				str(clean_tweet_text(tweet['text'].encode('ascii', 'ignore')))	
 			]]
-			max_id_retrieved = max(max_id_retrieved,int(tweet['id']))
+			# updating the max id
+			max_id_retrieved = max(max_id_retrieved,long(tweet['id']))
+			# updating the min_id
+			if(least_id_retrieved is None):
+				least_id_retrieved = long(tweet['id'])
+			else:
+				least_id_retrieved = min(least_id_retrieved,long(tweet['id']))
+			# updating the retrival counter
 			tweets_retrieved = tweets_retrieved + 1
+			# if 100 tweets retrieved dump them
 			if(tweets_retrieved  % 100 == 0):
 				print ('tweets retrieved till now : ' + str(tweets_retrieved))
 				append_tweets_to_file(tweetresults,file_to_store)
 				tweetresults = []
 	except TwitterSearchException as e:
 		print 'Twitter exception'
+		if(e.code == 429):
+			print 'too many requests waiting for 2 mins'
+			time.sleep(180)
+			if(tweets_retrieved == 0):
+				max_id_retrieved = max_id
+				least_id_retrieved = max_id
 		print(e)
 	except Exception as e:
 		print 'other exception'
 		print e
-	return max_id_retrieved,tweets_retrieved
+	# dump tweets if buffer is not empty
+	if (len(tweetresults) > 0):
+		append_tweets_to_file(tweetresults,file_to_store)
+		tweetresults = []
+	return max_id_retrieved,least_id_retrieved,tweets_retrieved
 
 def reset_tweetfile():
 	reset_file(config.TWEET_STORAGE_SHEET)
@@ -105,14 +125,21 @@ def get_tweets(keywords,start_date,end_date):
 	# getting a tweet before the start date
 	reset_file(config.TEMP_FILE)
 	# get_recent_tweets(keywords,since_id = None,max_id = None,until = None,max_tweet_count = None,file_to_store = None)
-	before_start_max_id,before_start_tweets_retrieved = get_recent_tweets(keywords,None,None,start_date,1,config.TEMP_FILE)
+	before_start_max_id,before_start_least_id,before_start_tweets_retrieved = get_recent_tweets(keywords,None,None,start_date,1,config.TEMP_FILE)
 
 	print ('max Tweet ID before Start = (approx) ',before_start_max_id)
 
-	
+	least_id = None
+	total_retrieved = 0
+	trial_count = 1
+	while(True):
+		max_id,least_id,retrieved = get_recent_tweets(keywords,before_start_max_id,
+			least_id,end_date,None,config.TWEET_STORAGE_SHEET)
+		total_retrieved = total_retrieved + retrieved
+		print 'Trial ',trial_count,'Retrieved ',retrieved, 'Total_Retrieved ',total_retrieved
 
 	return
 
 # get_tweets('2015-03-20','2015-03-30')
 # get_tweets('worldcup',calendar.datetime.date(2015,4,30),calendar.datetime.date(2015,3,30))
-get_tweets('ultron',calendar.datetime.date(2015,4,27),calendar.datetime.date(2015,3,30))
+get_tweets('ultron',calendar.datetime.date(2015,4,27),calendar.datetime.date(2015,5,3))
