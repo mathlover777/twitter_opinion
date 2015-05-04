@@ -13,6 +13,7 @@ TWEET_STORAGE_SHEET = 'tweets.csv'
 EXTRACT_INFO = 'extractinfo.txt'
 USER_INFO = 'userdata.txt'
 APP_INFO = 'appinfo.txt'
+TEMP_FILE = 'tempfile.txt'
 
 REQUEST_TOKEN_URL = "https://api.twitter.com/oauth/request_token"
 AUTHORIZE_URL = "https://api.twitter.com/oauth/authorize?oauth_token="

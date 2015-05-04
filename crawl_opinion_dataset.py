@@ -1,19 +1,25 @@
 from TwitterSearch import *
 import config
 import csv
+import calendar
 
 def clean_tweet_text(tweettext):
 	return tweettext.replace('|',' ').replace('\n',' ')
 
-def append_tweets_to_file(tweet_list):
-	with open(config.TWEET_STORAGE_SHEET, 'ab') as csvfile:
+def append_tweets_to_file(tweet_list,file_to_store = None):
+	filename = ''
+	if(file_to_store is None):
+		filename = config.TWEET_STORAGE_SHEET
+	else:
+		filename = file_to_store
+	with open(filename, 'ab') as csvfile:
 		csvwriter = csv.writer(csvfile, delimiter='|',quotechar='\'', quoting=csv.QUOTE_MINIMAL,dialect='excel')
 		for tweet in tweet_list:
 			# print tweet
 			csvwriter.writerow(tweet)
 
-def get_recent_tweets(keywords,since_id = None):
-	max_id = 0
+def get_recent_tweets(keywords,since_id = None,max_id = None,until = None,max_tweet_count = None,file_to_store = None):
+	max_id_retrieved = 0
 	tweets_retrieved = 0
 	tweetresults = []
 	try:
@@ -23,8 +29,14 @@ def get_recent_tweets(keywords,since_id = None):
 		tso.set_include_entities(False) # and don't give us all those entity information
 		# it's about time to create a TwitterSearch object with our secret tokens
 		if (since_id is not None):
+			print 'setting since id ',since_id
 			tso.set_since_id(long(since_id))
-
+		if(max_id is not None):
+			print 'setting max_id ',max_id
+			tso.set_max_id(long(max_id))
+		if(until is not None):
+			print 'setting until ',until
+			tso.set_until(until)
 		print 'Consumer KEY = ',config.CONSUMER_KEY
 		print 'Consumer Secret = ',config.CONSUMER_SECRET
 		print 'OAUTH_TOKEN = ',config.OAUTH_TOKEN
@@ -34,28 +46,37 @@ def get_recent_tweets(keywords,since_id = None):
 		print 'here\n'
 		# this is where the fun actually starts :)
 		for tweet in ts.search_tweets_iterable(tso):
+			if(max_tweet_count is not None):
+				if (max_tweet_count == tweets_retrieved):
+					break
 			# print( '@%s %s tweeted: %s' % ( str(i), tweet['user']['screen_name'], tweet['text'].encode('ascii', 'ignore') ) )
-			tweetresults = tweetresults + [[	
+			tweetresults = tweetresults + [[
 				str(tweet['id']),
 				str(tweet['created_at']),
 				str(tweet['user']['id']),
 				str(tweet['user']['screen_name']),
 				str(clean_tweet_text(tweet['text'].encode('ascii', 'ignore')))	
 			]]
-			max_id = max(max_id,int(tweet['id']))
+			max_id_retrieved = max(max_id_retrieved,int(tweet['id']))
 			tweets_retrieved = tweets_retrieved + 1
 			if(tweets_retrieved  % 100 == 0):
 				print ('tweets retrieved till now : ' + str(tweets_retrieved))
-				append_tweets_to_file(tweetresults)
+				append_tweets_to_file(tweetresults,file_to_store)
 				tweetresults = []
 	except TwitterSearchException as e:
+		print 'Twitter exception'
 		print(e)
 	except Exception as e:
+		print 'other exception'
 		print e
-	return max_id,tweets_retrieved
+	return max_id_retrieved,tweets_retrieved
 
 def reset_tweetfile():
-	with open(config.TWEET_STORAGE_SHEET,'wb'):
+	reset_file(config.TWEET_STORAGE_SHEET)
+	return
+
+def reset_file(filename):
+	with open(filename,'wb'):
 		pass
 
 def tester():
@@ -72,4 +93,26 @@ def tester():
 	with open(config.EXTRACT_INFO,'wb') as fp:
 		fp.write(str(max_id) + '\n')
 
-tester()
+# tester()
+# max_id Returns results with an ID less than (that is, older than) or equal to the specified ID.
+# since_id Returns results with an ID greater than (that is, more recent than) the specified ID.
+
+def get_tweets(keywords,start_date,end_date):
+	reset_tweetfile()
+	config.init_app_config()
+	config.init_config()
+	# YYYY-MM-DD --- format of untill
+	# getting a tweet before the start date
+	reset_file(config.TEMP_FILE)
+	# get_recent_tweets(keywords,since_id = None,max_id = None,until = None,max_tweet_count = None,file_to_store = None)
+	before_start_max_id,before_start_tweets_retrieved = get_recent_tweets(keywords,None,None,start_date,1,config.TEMP_FILE)
+
+	print ('max Tweet ID before Start = (approx) ',before_start_max_id)
+
+	
+
+	return
+
+# get_tweets('2015-03-20','2015-03-30')
+# get_tweets('worldcup',calendar.datetime.date(2015,4,30),calendar.datetime.date(2015,3,30))
+get_tweets('ultron',calendar.datetime.date(2015,4,27),calendar.datetime.date(2015,3,30))
