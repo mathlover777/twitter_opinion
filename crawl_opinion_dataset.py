@@ -24,6 +24,7 @@ def get_recent_tweets(keywords,since_id = None,max_id = None,until = None,max_tw
 	tweets_retrieved = 0
 	least_id_retrieved = None
 	tweetresults = []
+	last_id = None
 	try:
 		tso = TwitterSearchOrder() # create a TwitterSearchOrder object
 		tso.set_keywords(keywords) # let's define all words we would like to have a look for
@@ -36,7 +37,7 @@ def get_recent_tweets(keywords,since_id = None,max_id = None,until = None,max_tw
 		if(max_id is not None):
 			print 'setting max_id ',max_id
 			tso.set_max_id(long(max_id))
-		if(until is not None):
+		if(until is not None and max_id is None):
 			print 'setting until ',until
 			tso.set_until(until)
 		# print 'Consumer KEY = ',config.CONSUMER_KEY
@@ -59,6 +60,13 @@ def get_recent_tweets(keywords,since_id = None,max_id = None,until = None,max_tw
 				str(tweet['user']['screen_name']),
 				str(clean_tweet_text(tweet['text'].encode('ascii', 'ignore')))	
 			]]
+			if(last_id == None):
+				last_id = long(tweet['id'])
+			else:
+				curr_id = long(tweet['id'])
+				if(curr_id >= last_id):
+					print 'repeation in single call'
+					quit()
 			# updating the max id
 			max_id_retrieved = max(max_id_retrieved,long(tweet['id']))
 			# updating the min_id
@@ -80,14 +88,16 @@ def get_recent_tweets(keywords,since_id = None,max_id = None,until = None,max_tw
 			print 'too many requests waiting for 3 mins'
 			time.sleep(180)
 			if(tweets_retrieved == 0):
-				max_id_retrieved = max_id
-				least_id_retrieved = max_id
+				print 'resetting in tweet exception'
+				max_id_retrieved = max_id -long(1)
+				least_id_retrieved = max_id -long(1)
 	except Exception as e:
 		print 'other exception'
 		print e
 		if(tweets_retrieved == 0):
-			max_id_retrieved = max_id
-			least_id_retrieved = max_id
+			print 'resetting in other exception'
+			max_id_retrieved = max_id -long(1)
+			least_id_retrieved = max_id -long(1)
 	# dump tweets if buffer is not empty
 	if (len(tweetresults) > 0):
 		append_tweets_to_file(tweetresults,file_to_store)
@@ -138,12 +148,16 @@ def get_tweets(keywords,start_date,end_date):
 	while(True):
 		max_id,least_id,retrieved = get_recent_tweets(keywords,before_start_max_id,
 			least_id,end_date,None,config.TWEET_STORAGE_SHEET)
+		if(max_id is None or max_id == 0):
+			print 'max_id return became 0 or None ',max_id
+			quit()
 		total_retrieved = total_retrieved + retrieved
 		print 'Trial ',trial_count,'Retrieved ',retrieved, 'Total_Retrieved ',total_retrieved
-		print 'max_id ',max_id,'min_id ',min_id
-
+		print 'max_id ',max_id,'least_id ',least_id
+		if(least_id <= before_start_max_id and least_id is not None):
+			break
+	print 'crawl finished'
 	return
-
 # get_tweets('2015-03-20','2015-03-30')
-get_tweets(['worldcup'],calendar.datetime.date(2015,4,30),calendar.datetime.date(2015,3,30))
-# get_tweets(['ultron'],calendar.datetime.date(2015,4,27),calendar.datetime.date(2015,5,3))
+# get_tweets(['worldcup'],calendar.datetime.date(2015,4,30),calendar.datetime.date(2015,3,30))
+get_tweets(['ultron'],calendar.datetime.date(2015,4,27),calendar.datetime.date(2015,5,3))
