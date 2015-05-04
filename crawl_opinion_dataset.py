@@ -20,11 +20,13 @@ def append_tweets_to_file(tweet_list,file_to_store = None):
 			csvwriter.writerow(tweet)
 
 def get_recent_tweets(keywords,since_id = None,max_id = None,until = None,max_tweet_count = None,file_to_store = None):
-	max_id_retrieved = 0
+	max_id_retrieved = None
 	tweets_retrieved = 0
 	least_id_retrieved = None
 	tweetresults = []
-	last_id = None
+
+	if(max_id is not None):
+		last_id = max_id
 	try:
 		tso = TwitterSearchOrder() # create a TwitterSearchOrder object
 		tso.set_keywords(keywords) # let's define all words we would like to have a look for
@@ -53,6 +55,16 @@ def get_recent_tweets(keywords,since_id = None,max_id = None,until = None,max_tw
 				if (max_tweet_count == tweets_retrieved):
 					break
 			# print( '@%s %s tweeted: %s' % ( str(i), tweet['user']['screen_name'], tweet['text'].encode('ascii', 'ignore') ) )
+			if(last_id == None):
+				last_id = long(tweet['id'])
+			else:
+				curr_id = long(tweet['id'])
+				if(curr_id == last_id):
+					continue
+				if(curr_id > last_id):
+					print 'repeation in single call'
+					print 'curr id ',curr_id,'last_id ',last_id
+					quit()
 			tweetresults = tweetresults + [[
 				str(tweet['id']),
 				str(tweet['created_at']),
@@ -60,15 +72,11 @@ def get_recent_tweets(keywords,since_id = None,max_id = None,until = None,max_tw
 				str(tweet['user']['screen_name']),
 				str(clean_tweet_text(tweet['text'].encode('ascii', 'ignore')))	
 			]]
-			if(last_id == None):
-				last_id = long(tweet['id'])
-			else:
-				curr_id = long(tweet['id'])
-				if(curr_id >= last_id):
-					print 'repeation in single call'
-					quit()
 			# updating the max id
-			max_id_retrieved = max(max_id_retrieved,long(tweet['id']))
+			if(max_id_retrieved is None):
+				max_id_retrieved = long(tweet['id'])
+			else:
+				max_id_retrieved = max(max_id_retrieved,long(tweet['id']))
 			# updating the min_id
 			if(least_id_retrieved is None):
 				least_id_retrieved = long(tweet['id'])
@@ -87,18 +95,14 @@ def get_recent_tweets(keywords,since_id = None,max_id = None,until = None,max_tw
 		if(e.code == 429):
 			print 'too many requests waiting for 3 mins'
 			time.sleep(180)
-			if(tweets_retrieved == 0):
-				print 'resetting in tweet exception'
-				max_id_retrieved = max_id -long(1)
-				least_id_retrieved = max_id -long(1)
 	except Exception as e:
 		print 'other exception'
 		print e
-		if(tweets_retrieved == 0):
-			print 'resetting in other exception'
-			max_id_retrieved = max_id -long(1)
-			least_id_retrieved = max_id -long(1)
 	# dump tweets if buffer is not empty
+	if(tweets_retrieved == 0 and max_id is not None):
+		print 'resetting .. did nothing in this loop !'
+		max_id_retrieved = max_id -long(1)
+		least_id_retrieved = max_id -long(1)
 	if (len(tweetresults) > 0):
 		append_tweets_to_file(tweetresults,file_to_store)
 		tweetresults = []
