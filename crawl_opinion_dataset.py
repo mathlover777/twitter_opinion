@@ -26,7 +26,7 @@ def get_recent_tweets(keywords,since_id = None,max_id = None,until = None,max_tw
 	tweetresults = []
 	try:
 		tso = TwitterSearchOrder() # create a TwitterSearchOrder object
-		tso.set_keywords(['ultron']) # let's define all words we would like to have a look for
+		tso.set_keywords(keywords) # let's define all words we would like to have a look for
 		# tso.set_language('de') # we want to see German tweets only
 		tso.set_include_entities(False) # and don't give us all those entity information
 		# it's about time to create a TwitterSearch object with our secret tokens
@@ -39,13 +39,13 @@ def get_recent_tweets(keywords,since_id = None,max_id = None,until = None,max_tw
 		if(until is not None):
 			print 'setting until ',until
 			tso.set_until(until)
-		print 'Consumer KEY = ',config.CONSUMER_KEY
-		print 'Consumer Secret = ',config.CONSUMER_SECRET
-		print 'OAUTH_TOKEN = ',config.OAUTH_TOKEN
-		print 'OAUTH_TOKEN_SECRET = ',config.OAUTH_TOKEN_SECRET,
+		# print 'Consumer KEY = ',config.CONSUMER_KEY
+		# print 'Consumer Secret = ',config.CONSUMER_SECRET
+		# print 'OAUTH_TOKEN = ',config.OAUTH_TOKEN
+		# print 'OAUTH_TOKEN_SECRET = ',config.OAUTH_TOKEN_SECRET,
 		
 		ts = TwitterSearch(consumer_key = config.CONSUMER_KEY,consumer_secret = config.CONSUMER_SECRET ,access_token = config.OAUTH_TOKEN,access_token_secret = config.OAUTH_TOKEN_SECRET,proxy=config.PROXY)
-		print 'here\n'
+		# print 'here\n'
 		# this is where the fun actually starts :)
 		for tweet in ts.search_tweets_iterable(tso):
 			if(max_tweet_count is not None):
@@ -70,21 +70,24 @@ def get_recent_tweets(keywords,since_id = None,max_id = None,until = None,max_tw
 			tweets_retrieved = tweets_retrieved + 1
 			# if 100 tweets retrieved dump them
 			if(tweets_retrieved  % 100 == 0):
-				print ('tweets retrieved till now : ' + str(tweets_retrieved))
+				# print ('tweets retrieved till now : ' + str(tweets_retrieved))
 				append_tweets_to_file(tweetresults,file_to_store)
 				tweetresults = []
 	except TwitterSearchException as e:
 		print 'Twitter exception'
+		print(e)
 		if(e.code == 429):
-			print 'too many requests waiting for 2 mins'
+			print 'too many requests waiting for 3 mins'
 			time.sleep(180)
 			if(tweets_retrieved == 0):
 				max_id_retrieved = max_id
 				least_id_retrieved = max_id
-		print(e)
 	except Exception as e:
 		print 'other exception'
 		print e
+		if(tweets_retrieved == 0):
+			max_id_retrieved = max_id
+			least_id_retrieved = max_id
 	# dump tweets if buffer is not empty
 	if (len(tweetresults) > 0):
 		append_tweets_to_file(tweetresults,file_to_store)
@@ -137,9 +140,10 @@ def get_tweets(keywords,start_date,end_date):
 			least_id,end_date,None,config.TWEET_STORAGE_SHEET)
 		total_retrieved = total_retrieved + retrieved
 		print 'Trial ',trial_count,'Retrieved ',retrieved, 'Total_Retrieved ',total_retrieved
+		print 'max_id ',max_id,'min_id ',min_id
 
 	return
 
 # get_tweets('2015-03-20','2015-03-30')
-# get_tweets('worldcup',calendar.datetime.date(2015,4,30),calendar.datetime.date(2015,3,30))
-get_tweets('ultron',calendar.datetime.date(2015,4,27),calendar.datetime.date(2015,5,3))
+get_tweets(['worldcup'],calendar.datetime.date(2015,4,30),calendar.datetime.date(2015,3,30))
+# get_tweets(['ultron'],calendar.datetime.date(2015,4,27),calendar.datetime.date(2015,5,3))
