@@ -6,12 +6,15 @@ CONSUMER_SECRET = ''
 # user specific key
 OAUTH_TOKEN = ''
 OAUTH_TOKEN_SECRET = ''
+OAUTH_TOKEN1 = ''
+OAUTH_TOKEN_SECRET1 = ''
 #####################
 
 BASE_URL = 'https://api.twitter.com'
 TWEET_STORAGE_SHEET = 'tweets.csv'
 EXTRACT_INFO = 'extractinfo.txt'
 USER_INFO = 'userdata.txt'
+USER_INFO1 = 'userdata1.txt'
 APP_INFO = 'appinfo.txt'
 TEMP_FILE = 'tempfile.txt'
 
@@ -38,4 +41,12 @@ def init_config():
 		print data
 		OAUTH_TOKEN = data[0].rstrip('\n')
 		OAUTH_TOKEN_SECRET = data[1].rstrip('\n')
+	
+	global OAUTH_TOKEN1
+	global OAUTH_TOKEN_SECRET1
+	with open(USER_INFO1,'rb') as fp:
+		data = fp.readlines()
+		print data
+		OAUTH_TOKEN1 = data[0].rstrip('\n')
+		OAUTH_TOKEN_SECRET1 = data[1].rstrip('\n')
 	return
