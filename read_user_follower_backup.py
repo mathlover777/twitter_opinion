@@ -1,5 +1,7 @@
 import json
 import tarjan
+import time
+import csv
 
 def saveAsJson(A,filename):
 	with open(filename,'wb') as fp:
@@ -73,6 +75,59 @@ def filter_useless_nodes(graph):
 		new_graph[node] = filter(lambda followed_node:followed_node in graph,graph[node])
 	return new_graph
 
+def get_scc_graph(graph,scc):
+	scc_graph = {}
+	for node in scc:
+		scc_graph[node] = filter(lambda followed_node:followed_node in scc,graph[node])
+	return scc_graph
+
+def save_edge_list(graph,filename):
+	with open(filename,'wb') as fp:
+		for node in graph:
+			for followed_node in graph[node]:
+				fp.write(str(node) + ' ' + str(followed_node) + '\n')
+	return
+
+def save_node_list(graph,filename):
+	with open(filename,'wb') as fp:
+		for node in graph:
+			fp.write(str(node) + '\n')
+
+def append_tweets_to_file(tweet_list,file_to_store = None):
+	filename = ''
+	if(file_to_store is None):
+		filename = config.TWEET_STORAGE_SHEET
+	else:
+		filename = file_to_store
+	with open(filename, 'ab') as csvfile:
+		csvwriter = csv.writer(csvfile, delimiter='|',quotechar='\'', quoting=csv.QUOTE_MINIMAL,dialect='excel')
+		for tweet in tweet_list:
+			string_tweet = map(lambda x:str(x),tweet)
+			# print tweet
+			csvwriter.writerow(string_tweet)
+
+def reset_file(filename):
+	with open(filename,'wb'):
+		pass
+
+def get_scc_tweets(filename,scc_graph_true_id):
+	filtered_tweets = []
+	with open(filename, 'rb') as csvfile:
+		csv_reader = csv.reader(csvfile, delimiter='|',quotechar='\'', quoting=csv.QUOTE_MINIMAL,dialect='excel')
+		
+		for tweet in csv_reader:
+			# time.mktime(time.strptime(created_at,"%a %b %d %H:%M:%S +0000 %Y")) # taken from net of SO user with 10k+ rep
+			user_id = tweet[2]
+			if(int(user_id) not in scc_graph_true_id):
+				continue
+			timestamp = time.mktime(time.strptime(tweet[1],"%a %b %d %H:%M:%S +0000 %Y"))
+			tweet_text = tweet[4]
+
+			filtered_tweets = filtered_tweets + [[user_id,timestamp,tweet_text]]
+
+	print ('total useful tweets :',len(filtered_tweets))
+	reset_file('filtered_opinion.csv')
+	append_tweets_to_file(filtered_tweets,'filtered_opinion.csv')
 
 def get_graph(filename):
 	raw_graph = get_graph_raw(filename)
@@ -91,7 +146,7 @@ def get_graph(filename):
 
 	saveAsJson(new_graph,'new_graph.json')
 
-	filtered_graph = None
+	# filtered_graph = None
 
 	scc_list = tarjan.tarjan(new_graph)
 
@@ -101,7 +156,21 @@ def get_graph(filename):
 
 	max_scc = max(scc_list,key = lambda x:len(x))
 
+	print ('max_scc size ',len(max_scc))
+
 	saveAsJson(max_scc,'max_scc.json')
+
+	scc_graph = get_scc_graph(new_graph,max_scc)
+
+	saveAsJson(scc_graph,'scc_graph.json')
+	scc_graph_true_id = transform_graph(scc_graph,good_id_to_old_id)
+	saveAsJson(scc_graph_true_id,'scc_graph_true_id.json')
+	print 'size of max scc graph : ',len(scc_graph_true_id)
+
+	save_node_list(scc_graph_true_id,'nodelist.txt')
+	save_edge_list(scc_graph_true_id,'edgelist.txt')
+
+	get_scc_tweets('tweets_ultron.csv',scc_graph_true_id)
 
 # get_graph_raw('user_follow_graph_backup.txt')
 get_graph('user_follow_graph_backup.txt')
