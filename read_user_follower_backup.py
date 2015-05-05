@@ -13,6 +13,7 @@ def loadJsonObject(filename):
 
 def get_graph_raw(filename):
 	raw_graph = {}
+	crawled_nodes = []
 	with open(filename,'rb') as fp:
 		for line in fp:
 			if('*' in line):
@@ -22,11 +23,13 @@ def get_graph_raw(filename):
 			follow_list = node_adjacency[1]
 			user_id_long = int(user_id)
 			follow_list_long = map(lambda x:int(x),follow_list)
+			crawled_nodes = crawled_nodes + [user_id_long]
 			# print follow_list_long
 			# print user_id_long
 			raw_graph[user_id_long] = follow_list_long
 
 	saveAsJson(raw_graph,'raw_graph.json')
+	saveAsJson(crawled_nodes,'crawled_nodes.json')
 	return raw_graph
 
 def get_graph_id_to_good_id_mapping(raw_graph):
@@ -129,6 +132,8 @@ def get_scc_tweets(filename,scc_graph_true_id):
 	reset_file('filtered_opinion.csv')
 	append_tweets_to_file(filtered_tweets,'filtered_opinion.csv')
 
+
+
 def get_graph(filename):
 	raw_graph = get_graph_raw(filename)
 	# verify_filter(raw_graph)
@@ -173,4 +178,25 @@ def get_graph(filename):
 	get_scc_tweets('tweets_ultron.csv',scc_graph_true_id)
 
 # get_graph_raw('user_follow_graph_backup.txt')
-get_graph('user_follow_graph_backup.txt')
+
+def get_remaining_users_to_crawl():
+	crawled_nodes = loadJsonObject('crawled_nodes.json')
+	nodes_to_crawl = loadJsonObject('users_to_crawl.txt')
+
+	crawled_set = set(crawled_nodes)
+
+
+	remaining_to_crawl = []
+
+	for node_info in nodes_to_crawl:
+		node_id = node_info[0]
+		if int(node_id) not in crawled_set:
+			remaining_to_crawl = remaining_to_crawl + [node_info]
+
+	saveAsJson(remaining_to_crawl,'users_to_crawl.txt')
+
+
+# get_graph('user_follow_graph_backup.txt')
+
+# must be followed after get_graph if required to run
+get_remaining_users_to_crawl()

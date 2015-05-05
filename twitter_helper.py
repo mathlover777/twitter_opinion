@@ -47,10 +47,10 @@ def make_call(url_call,oauth):
 	while(not success):
 		try:
 			r = requests.get(url=url_call, auth=oauth)
-			if (r.status_code == 200 or r.status_code == 429):
+			if (r.status_code == 200 or r.status_code == 429 or r.status_code == 401):
 				success = True
 			else:
-				print ('unknown code ! = '+ r.starus_code)
+				print ('unknown code ! = '+ str(r.status_code))
 		except Exception as e:
 			print e
 			print ('request timed out waiting for ' + str(waittime) + ' seconds...')
@@ -75,6 +75,11 @@ def get_temporary_friendlist(url_call,oauth):
 		elif (r.status_code == 429):
 			print('rate limit exceeded waiting for reset')
 			wait_for_friends_list_reset(oauth)
+		elif (r.status_code == 401):
+			print('private user')
+			friend_list_id = []
+			next_cursor = 0
+			success = True
 		else:
 			# unknown status code
 			print ('unknown status code ! = ' + str(r.status_code))
