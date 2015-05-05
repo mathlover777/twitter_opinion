@@ -363,12 +363,12 @@ def get_follow_list():
 	saveAsJson(user_follow_graph,'user_follow_graph.txt')
 
 # need to be called together after crawling tweets ##################
-test_get_user_distribution()
-get_users_to_crawl(11)
+# test_get_user_distribution()
+# get_users_to_crawl(11)
 #####################################################################
 # get_users_to_crawl(600)
 #################### actual follow crawler ##########################
-# get_follow_list()
+get_follow_list()
 #####################################################################
 
 def tweet_tester():
