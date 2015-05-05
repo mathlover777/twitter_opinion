@@ -9,7 +9,7 @@ from urlparse import parse_qs
 import pprint
 import csv
 import operator
-
+import json
 
 def get_resetinfo_friends_list(oauth):
 	url_call = config.BASE_URL+"/1.1/application/rate_limit_status.json?resources=friends"
@@ -93,12 +93,12 @@ def get_friend_list(user_id,screen_name,oauth,maxFriend = 5000):
 	count = 0
 	while cursor != 0 and count <maxCount:
 		url_call = config.BASE_URL + '/1.1/friends/ids.json?' + 'screen_name='+screen_name+'&'+'user_id='+user_id+'&cursor='+str(cursor)
-		print url_call
+		# print url_call
 		(friend_list_id,cursor) = get_temporary_friendlist(url_call,oauth)
 		# print friend_list_id
 		# print cursor
 		friend_list_id_complete = friend_list_id_complete + friend_list_id
-		print('making next call with cursor = ',str(cursor))
+		# print('making next call with cursor = ',str(cursor))
 		count = count + 1
 		# break
 	return friend_list_id_complete
@@ -262,17 +262,114 @@ def test_get_all_tweets():
 
 # test_get_all_tweets()
 #####################################################################################################
+def saveAsJson(A,filename):
+	with open(filename,'wb') as fp:
+		json.dump(A,fp,indent = 4)
+
+def loadJsonObject(filename):
+	with open(filename,'r') as fp:
+		return json.loads(fp.read())
+
+def get_count_statistics(tweet_count):
+	tweet_count_to_user_count = {}
+	for user in tweet_count:
+		if(tweet_count[user] in tweet_count_to_user_count):
+			tweet_count_to_user_count[tweet_count[user]] = tweet_count_to_user_count[tweet_count[user]] + 1
+		else:
+			tweet_count_to_user_count[tweet_count[user]] = 1
+	sorted_list = sorted(tweet_count_to_user_count.items(), key=operator.itemgetter(0),reverse = True)
+	cum_sorted_list = []
+	already_counted = 0
+	for pair in sorted_list:
+		count = pair[0]
+		number_of_users = pair[1]
+		already_counted = already_counted + pair[1]
+		cum_sorted_list = cum_sorted_list + [[pair[0],already_counted]]
+
+	saveAsJson(sorted_list,'sorted_stat.txt')
+	saveAsJson(cum_sorted_list,'cum_sorted_stat.txt')
 
 def get_user_distribution(filename):
 	tweet_count = {}
+	user_id_screen_name_mapping = {}
+	num_of_tweets = 0
 	with open(filename, 'rb') as csvfile:
 		csv_reader = csv.reader(csvfile, delimiter='|',quotechar='\'', quoting=csv.QUOTE_MINIMAL,dialect='excel')
 		for tweet in csv_reader:
-			tweet_id = tweet[0]
-			if(tweet_id in tweet_count):
-				tweet_count[tweet_id] = tweet_count[tweet_id] + 1
+			tweet_user_id = tweet[2]
+			tweet_user_screen_name = tweet[3]
+			num_of_tweets = num_of_tweets + 1
+			if(tweet_user_id in tweet_count):
+				tweet_count[tweet_user_id] = tweet_count[tweet_user_id] + 1
 			else:
-				tweet_count[tweet_id] = 1
+				tweet_count[tweet_user_id] = 1
+			if(tweet_user_id in user_id_screen_name_mapping):
+				pass
+			else:
+				user_id_screen_name_mapping[tweet_user_id] = tweet_user_screen_name
+	saveAsJson(user_id_screen_name_mapping,'user_id_screen_name_mapping.txt')
+	user_id_screen_name_mapping = {}
+	print('total uniquie users = ',len(tweet_count),' out of total ',num_of_tweets,' tweets !')
+	sorted_tweet_count = sorted(tweet_count.items(), key=operator.itemgetter(1),reverse=True)
+	saveAsJson(sorted_tweet_count,'sorted_tweet_count.txt')
+	sorted_tweet_count = []
+	get_count_statistics(tweet_count)
+
+def test_get_user_distribution():
+	# get_user_distribution(config.TWEET_STORAGE_SHEET)
+	get_user_distribution('tweets_ultron.csv')
+
+
+def get_users_to_crawl(min_tweet_count):
+	sorted_tweet_count = loadJsonObject('sorted_tweet_count.txt')
+	user_id_screen_name_mapping = loadJsonObject('user_id_screen_name_mapping.txt')
+	users_to_crawl = []
+	for user in sorted_tweet_count:
+		user_id = user[0]
+		user_tweet_count = user[1]
+
+		if(user_tweet_count < min_tweet_count):
+			# as list is already sorted in reverse does not need to go further
+			break
+		users_to_crawl = users_to_crawl + [(user_id,user_id_screen_name_mapping[user_id],user_tweet_count)]
+	saveAsJson(users_to_crawl,'users_to_crawl.txt')
+	print 'total '+str(len(users_to_crawl)) + ' users to crawl'
+	return users_to_crawl
+
+def get_follow_list():
+	config.init_config()
+	config.init_app_config()
+	oauth1 = get_oauth(config.CONSUMER_KEY,config.CONSUMER_SECRET,config.OAUTH_TOKEN,config.OAUTH_TOKEN_SECRET)
+	oauth2 = get_oauth(config.CONSUMER_KEY,config.CONSUMER_SECRET,config.OAUTH_TOKEN1,config.OAUTH_TOKEN_SECRET1)
+
+	oauth_list = [oauth1,oauth2]
+	
+
+	users_to_crawl = loadJsonObject('users_to_crawl.txt')
+	user_follow_graph = {}
+	trial = 0
+	for user in users_to_crawl:
+		user_id = user[0]
+		screen_name = user[1]
+		follow_list = get_friend_list(user_id,screen_name,oauth_list[trial],5000)
+		trial = (trial + 1)%len(oauth_list)
+		user_follow_graph[user_id] = follow_list
+		single_user_data = (user_id,follow_list)
+		single_user_data_json = json.dumps(single_user_data)
+		with open('user_follow_graph_backup.txt','ab') as fp:
+			fp.write('*******************\n')
+			fp.write(single_user_data_json)
+			fp.write('\n')
+	saveAsJson(user_follow_graph,'user_follow_graph.txt')
+
+# need to be called together after crawling tweets ##################
+test_get_user_distribution()
+get_users_to_crawl(11)
+#####################################################################
+# get_users_to_crawl(600)
+#################### actual follow crawler ##########################
+# get_follow_list()
+#####################################################################
 
 def tweet_tester():
 	config.init_config()
@@ -285,7 +382,7 @@ def tweet_tester():
 	max_id = 594652545894764544
 	since_id = 592478218063638528
 	reset_file(config.TWEET_STORAGE_SHEET)
-	get_all_tweets_by_id('ultron',since_id,max_id,oauth1,oauth2,config.TWEET_STORAGE_SHEET)
+	get_all_tweets_by_id('ultron',since_id,max_id,[oauth1,oauth2],config.TWEET_STORAGE_SHEET)
 
 # tweet_tester()
 
