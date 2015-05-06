@@ -10,6 +10,10 @@ OAUTH_TOKEN1 = ''
 OAUTH_TOKEN_SECRET1 = ''
 #####################
 
+########### info for set of users #######
+user_token = []
+# of the format (OAUTH_TOKEN,OAUTH_TOKEN_SECRET)
+#########################################
 BASE_URL = 'https://api.twitter.com'
 TWEET_STORAGE_SHEET = 'tweets.csv'
 EXTRACT_INFO = 'extractinfo.txt'
@@ -50,3 +54,11 @@ def init_config():
 		OAUTH_TOKEN1 = data[0].rstrip('\n')
 		OAUTH_TOKEN_SECRET1 = data[1].rstrip('\n')
 	return
+
+def init_user_config():
+	global user_token
+	with open(USER_INFO) as fp:
+		token = fp.readline()
+		secret = fp.readline()
+
+		

@@ -129,7 +129,7 @@ def get_scc_tweets(filename,scc_graph_true_id):
 			user_id = tweet[2]
 			if(int(user_id) not in scc_graph_true_id):
 				continue
-			timestamp = time.mktime(time.strptime(tweet[1],"%a %b %d %H:%M:%S +0000 %Y"))
+			timestamp = int(time.mktime(time.strptime(tweet[1],"%a %b %d %H:%M:%S +0000 %Y")))
 			tweet_text = clean_tweet_text(tweet[4])
 
 			filtered_tweets = filtered_tweets + [[user_id,timestamp,tweet_text]]
