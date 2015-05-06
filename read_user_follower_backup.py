@@ -2,6 +2,7 @@ import json
 import tarjan
 import time
 import csv
+import networkx as nx
 
 def saveAsJson(A,filename):
 	with open(filename,'wb') as fp:
@@ -26,6 +27,8 @@ def get_graph_raw(filename):
 			crawled_nodes = crawled_nodes + [user_id_long]
 			# print follow_list_long
 			# print user_id_long
+			if user_id_long in raw_graph:
+				print 'repeating nodes in backup graph'
 			raw_graph[user_id_long] = follow_list_long
 
 	saveAsJson(raw_graph,'raw_graph.json')
@@ -96,6 +99,9 @@ def save_node_list(graph,filename):
 		for node in graph:
 			fp.write(str(node) + '\n')
 
+def clean_tweet_text(tweettext):
+	return tweettext.replace('|',' ').replace('\n',' ').replace('#',' ')
+
 def append_tweets_to_file(tweet_list,file_to_store = None):
 	filename = ''
 	if(file_to_store is None):
@@ -124,7 +130,7 @@ def get_scc_tweets(filename,scc_graph_true_id):
 			if(int(user_id) not in scc_graph_true_id):
 				continue
 			timestamp = time.mktime(time.strptime(tweet[1],"%a %b %d %H:%M:%S +0000 %Y"))
-			tweet_text = tweet[4]
+			tweet_text = clean_tweet_text(tweet[4])
 
 			filtered_tweets = filtered_tweets + [[user_id,timestamp,tweet_text]]
 
@@ -132,7 +138,50 @@ def get_scc_tweets(filename,scc_graph_true_id):
 	reset_file('filtered_opinion.csv')
 	append_tweets_to_file(filtered_tweets,'filtered_opinion.csv')
 
+def test_using_shortest_path(graph):
+	print 'nx test begins'
+	G = nx.DiGraph()
+	for node in graph:
+		G.add_node(node)
+	for node in graph:
+		for followed_node in graph[node]:
+			G.add_edge(node,followed_node)
 
+	# test part
+	for x in G:
+		for y in G:
+			if not nx.has_path(G,x,y):
+				print 'not scc ',x,' ', y
+				return
+
+	print 'test with networks successful'
+	return
+
+def is_subgraph_test(graph,max_scc_graph):
+	print 'size of graph ',len(graph)
+	print 'size of max scc',len(max_scc_graph)
+
+	for node in max_scc_graph:
+		actual_set = set(graph[node])
+		for followed_node in max_scc_graph[node]:
+			if followed_node not in actual_set:
+				print 'not subgraph ',node,' ',followed_node
+				return
+	print 'subgraph test successful'
+	return
+
+def test_strongly_connected(graph,actual_graph):
+	verify_filter(graph)
+	old_id_to_good_id,good_id_to_old_id = get_graph_id_to_good_id_mapping(graph)
+	new_graph = transform_graph(graph,old_id_to_good_id)
+
+	scc_list = tarjan.tarjan(new_graph)
+	print 'scclist size in graph :',len(scc_list)
+
+	test_using_shortest_path(new_graph)
+
+	is_subgraph_test(actual_graph,graph)
+	return
 
 def get_graph(filename):
 	raw_graph = get_graph_raw(filename)
@@ -142,9 +191,11 @@ def get_graph(filename):
 	print 'number of nodes :',len(filtered_graph)
 
 	saveAsJson(filtered_graph,'filtered_graph.json')
-	raw_graph = None
+	# raw_graph = None
 	old_id_to_good_id,good_id_to_old_id = get_graph_id_to_good_id_mapping(filtered_graph)
 	new_graph = transform_graph(filtered_graph,old_id_to_good_id)
+
+	# test_strongly_connected(new_graph,new_graph)
 
 	saveAsJson(old_id_to_good_id,'old_id_to_good_id.json')
 	saveAsJson(good_id_to_old_id,'good_id_to_old_id.json')
@@ -175,7 +226,15 @@ def get_graph(filename):
 	save_node_list(scc_graph_true_id,'nodelist.txt')
 	save_edge_list(scc_graph_true_id,'edgelist.txt')
 
+	filtered_graph = None
+	scc_graph = None
+	new_graph = None
+	old_id_to_good_id = None
+	good_id_to_old_id = None
+
 	get_scc_tweets('tweets_ultron.csv',scc_graph_true_id)
+
+	test_strongly_connected(scc_graph_true_id,raw_graph)
 
 # get_graph_raw('user_follow_graph_backup.txt')
 
@@ -196,7 +255,7 @@ def get_remaining_users_to_crawl():
 	saveAsJson(remaining_to_crawl,'users_to_crawl.txt')
 
 
-# get_graph('user_follow_graph_backup.txt')
+get_graph('user_follow_graph_backup.txt')
 
 # must be followed after get_graph if required to run
-get_remaining_users_to_crawl()
+# get_remaining_users_to_crawl()
