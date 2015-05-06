@@ -11,7 +11,7 @@ OAUTH_TOKEN_SECRET1 = ''
 #####################
 
 ########### info for set of users #######
-user_token = []
+USER_TOKEN_LIST = []
 # of the format (OAUTH_TOKEN,OAUTH_TOKEN_SECRET)
 #########################################
 BASE_URL = 'https://api.twitter.com'
@@ -56,9 +56,12 @@ def init_config():
 	return
 
 def init_user_config():
-	global user_token
+	global USER_TOKEN_LIST
 	with open(USER_INFO) as fp:
-		token = fp.readline()
-		secret = fp.readline()
-
-		
+		lines = fp.readlines()
+		# print lines
+		for i in xrange(0,len(lines),2):
+			token = lines[i].rstrip('\n')
+			secret = lines[i + 1].rstrip('\n')
+			USER_TOKEN_LIST = USER_TOKEN_LIST + [(token,secret)]
+	return

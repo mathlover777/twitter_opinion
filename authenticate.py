@@ -43,8 +43,18 @@ def authenticate():
 		fp.write(token + '\n')
 		fp.write(secret + '\n')
 
-	print 'these will be saved in userdata.txt and will be used in init_config'
+	print 'these will be saved in userdata.txt'
 
+	return
+
+def display_user_data():
+	config.init_user_config()
+	user_count = 1
+	for (token,secret) in config.USER_TOKEN_LIST:
+		print 'user_'+str(user_count)+' info ****\n'
+		print 'token = {' + token + '}'
+		print 'secret = {' + secret + '}'
+		user_count = user_count + 1
 	return
 
 def reset_file(filename):
@@ -55,4 +65,6 @@ def clear_all_user_data():
 	reset_file(config.USER_INFO)
 	return
 
+# display_user_data()
+# clear_all_user_data()
 authenticate()

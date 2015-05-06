@@ -253,19 +253,33 @@ def get_all_tweets(keyword,start_date,end_date,oauth_list,filename):
 	return
 
 def test_get_all_tweets():
-	config.init_config()
-	config.init_app_config()
-	oauth1 = get_oauth(config.CONSUMER_KEY,config.CONSUMER_SECRET,config.OAUTH_TOKEN,config.OAUTH_TOKEN_SECRET)
-	oauth2 = get_oauth(config.CONSUMER_KEY,config.CONSUMER_SECRET,config.OAUTH_TOKEN1,config.OAUTH_TOKEN_SECRET1)
+	# config.init_config()
+	# oauth1 = get_oauth(config.CONSUMER_KEY,config.CONSUMER_SECRET,config.OAUTH_TOKEN,config.OAUTH_TOKEN_SECRET)
+	# oauth2 = get_oauth(config.CONSUMER_KEY,config.CONSUMER_SECRET,config.OAUTH_TOKEN1,config.OAUTH_TOKEN_SECRET1)
 
-	oauth_list = [oauth1,oauth2]
+
+
+	config.init_app_config()
+	print 'test get all tweets'
+	config.init_user_config()
+	token_list = config.USER_TOKEN_LIST
+
+	print 'trying to get oauth for ' + str(len(token_list)) + ' users'
+
+	oauth_list = map(lambda x:get_oauth(config.CONSUMER_KEY,config.CONSUMER_SECRET,x[0],x[1]),token_list)
+
+	# print map(lambda x:x.to_string(),oauth_list)
+
+	print 'oauth successful !'
+	# return
+	# oauth_list = [oauth1,oauth2]
 
 	reset_file(config.TWEET_STORAGE_SHEET)
-	get_all_tweets('ultron','2015-04-28','2015-05-03',oauth_list,config.TWEET_STORAGE_SHEET)
+	get_all_tweets('MayweatherPacquiao','2015-04-29','2015-05-08',oauth_list,config.TWEET_STORAGE_SHEET)
 	# tweets will come from 2015-04-27(incl) to exactly before 2015-05-03 
 	# please maintain the format 
 
-# test_get_all_tweets()
+test_get_all_tweets()
 #####################################################################################################
 def saveAsJson(A,filename):
 	with open(filename,'wb') as fp:
@@ -373,7 +387,7 @@ def get_follow_list():
 #####################################################################
 # get_users_to_crawl(600)
 #################### actual follow crawler ##########################
-get_follow_list()
+# get_follow_list()
 #####################################################################
 
 def tweet_tester():
