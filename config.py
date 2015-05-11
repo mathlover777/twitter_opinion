@@ -14,19 +14,20 @@ OAUTH_TOKEN_SECRET1 = ''
 USER_TOKEN_LIST = []
 # of the format (OAUTH_TOKEN,OAUTH_TOKEN_SECRET)
 #########################################
-BASE_URL = 'https://api.twitter.com'
-TWEET_STORAGE_SHEET = 'tweets.csv'
-EXTRACT_INFO = 'extractinfo.txt'
-USER_INFO = 'userdata.txt'
-USER_INFO1 = 'userdata1.txt'
-APP_INFO = 'appinfo.txt'
-TEMP_FILE = 'tempfile.txt'
 
+############# api constants #############################
+BASE_URL = 'https://api.twitter.com'
 REQUEST_TOKEN_URL = "https://api.twitter.com/oauth/request_token"
 AUTHORIZE_URL = "https://api.twitter.com/oauth/authorize?oauth_token="
 ACCESS_TOKEN_URL = "https://api.twitter.com/oauth/access_token"
-
 PROXY = 'http://10.3.100.207:8080'
+########################################################
+
+########### networking constants #######################
+TWEET_STORAGE_SHEET = 'data/tweets.csv'
+USER_INFO = 'config_data/userdata.txt'
+APP_INFO = 'config_data/appinfo.txt'
+########################################################
 
 def init_app_config():
 	global CONSUMER_KEY
@@ -37,29 +38,10 @@ def init_app_config():
 		CONSUMER_KEY = data[0].rstrip('\n')
 		CONSUMER_SECRET = data[1].rstrip('\n')
 
-def init_config():
-	global OAUTH_TOKEN
-	global OAUTH_TOKEN_SECRET
-	with open(USER_INFO,'rb') as fp:
-		data = fp.readlines()
-		print data
-		OAUTH_TOKEN = data[0].rstrip('\n')
-		OAUTH_TOKEN_SECRET = data[1].rstrip('\n')
-	
-	global OAUTH_TOKEN1
-	global OAUTH_TOKEN_SECRET1
-	with open(USER_INFO1,'rb') as fp:
-		data = fp.readlines()
-		print data
-		OAUTH_TOKEN1 = data[0].rstrip('\n')
-		OAUTH_TOKEN_SECRET1 = data[1].rstrip('\n')
-	return
-
 def init_user_config():
 	global USER_TOKEN_LIST
 	with open(USER_INFO) as fp:
 		lines = fp.readlines()
-		# print lines
 		for i in xrange(0,len(lines),2):
 			token = lines[i].rstrip('\n')
 			secret = lines[i + 1].rstrip('\n')
