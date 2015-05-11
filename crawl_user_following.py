@@ -91,26 +91,72 @@ def get_temporary_friendlist(url_call,oauth):
 	# print 'next cursor = here',next_cursor
 	return (friend_list_id,next_cursor)
 
+def get_temporary_friendlist_with_flag(url_call,oauth):
+	friend_list_id = []
+	next_cursor = -1
+	r = make_call(url_call,oauth)
+	# print r
+	success_flag = False
+	if (r.status_code == 200):
+		# call request successful
+		response_json = r.json()
+		friend_list_id = response_json['ids']
+		next_cursor = response_json['next_cursor']
+		success_flag = True # do not repeat same call
+		# print 'next cursor = ',next_cursor
+
+	elif (r.status_code == 429):
+		print('rate limit exceeded waiting for reset waiting for 3 min before next call')
+		time.sleep(180)
+		friend_list_id = []
+		next_cursor = 0
+		success_flag = False # if false call will be repeated
+	elif (r.status_code == 401):
+		print('private user')
+		friend_list_id = []
+		next_cursor = 0
+		success_flag = True # do not repeat same call
+	else:
+		# unknown status code
+		print ('unknown status code ! = ' + str(r.status_code))
+		friend_list_id = []
+		next_cursor = 0
+		success_flag = True # do not repeat same call
+
+	return (friend_list_id,next_cursor,success_flag)
+
 
 
 ############################## To BE USED FROM OUTSIDE #####################################################
+
 def get_friend_list(user_id,screen_name,oauth,maxFriend = 5000):
-	# maxFriend is rounded upto the next 5000
+	# gives only first 5000 friend if successful ... otherwise nothing but with flags
 	cursor = -1
-	friend_list_id_complete = []
-	maxCount = int(math.ceil(float(maxFriend)/float(5000)))
-	count = 0
-	while cursor != 0 and count <maxCount:
-		url_call = config.BASE_URL + '/1.1/friends/ids.json?' + 'screen_name='+screen_name+'&'+'user_id='+user_id+'&cursor='+str(cursor)
-		# print url_call
-		(friend_list_id,cursor) = get_temporary_friendlist(url_call,oauth)
-		# print friend_list_id
-		# print cursor
-		friend_list_id_complete = friend_list_id_complete + friend_list_id
-		# print('making next call with cursor = ',str(cursor))
-		count = count + 1
-		# break
-	return friend_list_id_complete
+	url_call = config.BASE_URL + '/1.1/friends/ids.json?' + 'screen_name='+screen_name+'&'+'user_id='+user_id+'&cursor='+str(cursor)
+	# print url_call
+	(friend_list_id,cursor,success_flag) = get_temporary_friendlist_with_flag(url_call,oauth)
+	
+	return (friend_list_id,success_flag)
+
+# def get_friend_list(user_id,screen_name,oauth,maxFriend = 5000):
+# 	# maxFriend is rounded upto the next 5000
+# 	cursor = -1
+# 	friend_list_id_complete = []
+# 	maxCount = int(math.ceil(float(maxFriend)/float(5000)))
+# 	count = 0
+# 	while cursor != 0 and count <maxCount:
+# 		url_call = config.BASE_URL + '/1.1/friends/ids.json?' + 'screen_name='+screen_name+'&'+'user_id='+user_id+'&cursor='+str(cursor)
+# 		# print url_call
+# 		success_flag = False
+# 		while(not success_flag):
+# 			(friend_list_id,cursor,success_flag) = get_temporary_friendlist_with_flag(url_call,oauth)
+# 		# print friend_list_id
+# 		# print cursor
+# 		friend_list_id_complete = friend_list_id_complete + friend_list_id
+# 		# print('making next call with cursor = ',str(cursor))
+# 		count = count + 1
+# 		# break
+# 	return friend_list_id_complete
 
 def get_oauth(CONSUMER_KEY,CONSUMER_SECRET,OAUTH_TOKEN,OAUTH_TOKEN_SECRET):
 	oauth = OAuth1(CONSUMER_KEY,client_secret=CONSUMER_SECRET,resource_owner_key=OAUTH_TOKEN,resource_owner_secret=OAUTH_TOKEN_SECRET)
@@ -147,9 +193,11 @@ def get_follow_list():
 	for user in users_to_crawl:
 		user_id = user[0]
 		screen_name = user[1]
-		follow_list = get_friend_list(user_id,screen_name,oauth_list[trial],5000)
-		# trial = (trial + 1)%len(oauth_list)
-		trial = random.randint(0,len(oauth_list) - 1)
+		success_flag = False
+		while(not success_flag):
+			follow_list,success_flag = get_friend_list(user_id,screen_name,oauth_list[trial],5000)
+			# trial = (trial + 1)%len(oauth_list)
+			trial = random.randint(0,len(oauth_list) - 1)
 		user_follow_graph[user_id] = follow_list
 		single_user_data = (user_id,follow_list)
 		single_user_data_json = json.dumps(single_user_data)
