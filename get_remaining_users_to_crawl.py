@@ -2,6 +2,13 @@ import json
 import tarjan
 import time
 import csv
+def saveAsJson(A,filename):
+	with open(filename,'wb') as fp:
+		json.dump(A,fp,indent = 4)
+
+def loadJsonObject(filename):
+	with open(filename,'r') as fp:
+		return json.loads(fp.read())
 
 def get_crawled_nodes(filename):
 	raw_graph = {}
