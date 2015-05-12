@@ -3,7 +3,7 @@ import tarjan
 import time
 import csv
 
-def get_crawled_nodes():
+def get_crawled_nodes(filename):
 	raw_graph = {}
 	crawled_nodes = []
 	with open(filename,'rb') as fp:
