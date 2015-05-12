@@ -8,3 +8,6 @@ requests_oauthlib
 time
 pause
 urlparse
+nltk
+TextBlob
+Pattern

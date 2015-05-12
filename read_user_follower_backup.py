@@ -111,7 +111,7 @@ def save_node_list(graph,filename):
 
 def clean_tweet_text(tweettext):
 	# do all tweet text clearing here
-	return tweettext.replace('|',' ').replace('\n',' ').replace('#',' ')
+	return tweettext.replace('|',' ').replace('\n',' ').replace('#',' ').replace('\r',' ')
 
 def append_tweets_to_file(tweet_list,file_to_store = None):
 	# code to append tweet to file

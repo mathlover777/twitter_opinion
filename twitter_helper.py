@@ -142,7 +142,7 @@ def get_oauth(CONSUMER_KEY,CONSUMER_SECRET,OAUTH_TOKEN,OAUTH_TOKEN_SECRET):
 	return oauth
 
 def clean_tweet_text(tweettext):
-	return tweettext.replace('|',' ').replace('\n',' ')
+	return tweettext.replace('|',' ').replace('\n',' ').replace('\r',' ')
 
 def append_tweets_to_file(tweet_list,file_to_store = None):
 	filename = ''
