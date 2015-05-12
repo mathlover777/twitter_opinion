@@ -44,5 +44,5 @@ def get_remaining_users_to_crawl():
 	print str(len(remaining_to_crawl)) + ' nodes remaining !'
 	saveAsJson(remaining_to_crawl,'data/users_to_crawl.txt')
 
-get_crawled_nodes('user_follow_graph_backup.txt')
+get_crawled_nodes('data/user_follow_graph_backup.txt')
 get_remaining_users_to_crawl()
