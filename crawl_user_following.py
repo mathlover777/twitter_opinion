@@ -122,6 +122,7 @@ def get_temporary_friendlist_with_flag(url_call,oauth):
 	else:
 		# unknown status code
 		print get_time_string() + 'unknown status code ! = ' + str(r.status_code)
+		print url_call
 		print '***************\n'
 		print r.json()
 		print '***************\n'
@@ -195,15 +196,15 @@ def get_follow_list(continue_flag = False):
 
 	users_to_crawl = loadJsonObject('data/users_to_crawl.txt')
 	user_follow_graph = {}
-	trial = 0
+	# trial = 0
 	for user in users_to_crawl:
 		user_id = user[0]
 		screen_name = user[1]
 		success_flag = False
 		while(not success_flag):
+			trial = random.randint(0,len(oauth_list) - 1)
 			follow_list,success_flag = get_friend_list(user_id,screen_name,oauth_list[trial],5000)
 			# trial = (trial + 1)%len(oauth_list)
-			trial = random.randint(0,len(oauth_list) - 1)
 		user_follow_graph[user_id] = follow_list
 		single_user_data = (user_id,follow_list)
 		single_user_data_json = json.dumps(single_user_data)
