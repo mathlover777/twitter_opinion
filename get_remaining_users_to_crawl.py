@@ -21,7 +21,7 @@ def get_crawled_nodes():
 			if user_id_long in raw_graph:
 				print 'repeating nodes in backup graph'
 			raw_graph[user_id_long] = follow_list_long
-
+	print str(len(raw_graph)) + ' nodes crawled'
 	saveAsJson(crawled_nodes,'data/crawled_nodes.json')
 
 
@@ -32,6 +32,7 @@ def get_remaining_users_to_crawl():
 	crawled_set = set(crawled_nodes)
 
 
+
 	remaining_to_crawl = []
 
 	for node_info in nodes_to_crawl:
@@ -39,6 +40,8 @@ def get_remaining_users_to_crawl():
 		if int(node_id) not in crawled_set:
 			remaining_to_crawl = remaining_to_crawl + [node_info]
 
+	print str(len(crawled_nodes)) + ' out of ' + str(len(nodes_to_crawl)) + ' done'
+	print str(len(remaining_to_crawl)) + ' nodes remaining !'
 	saveAsJson(remaining_to_crawl,'data/users_to_crawl.txt')
 
 get_crawled_nodes('user_follow_graph_backup.txt')
