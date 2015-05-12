@@ -53,7 +53,7 @@ def reset_file(filename):
 		pass
 
 def get100TweetsbeforethisTweetID(keyword,since_id,max_id,oauth):
-	url_call = config.BASE_URL + "/1.1/search/tweets.json?q=" + keyword + "&count=100&since_id="+str(since_id) + "&max_id="+str(max_id)
+	url_call = config.BASE_URL + "/1.1/search/tweets.json?q=" + keyword + "&count=100&since_id="+str(since_id) + "&max_id="+str(max_id) + "&lang=en"
 	# print url_call
 	try:
 		r = make_call(url_call,oauth)
@@ -70,7 +70,8 @@ def get100TweetsbeforethisTweetID(keyword,since_id,max_id,oauth):
 	for tweet in response['statuses']:
 		tweet_id = tweet['id']
 		tweet_created_at = tweet['created_at']
-		tweet_text = clean_tweet_text(tweet['text'].encode('ascii', 'ignore'))
+		# tweet_text = clean_tweet_text(tweet['text'].encode('ascii', 'ignore'))
+		tweet_text = clean_tweet_text(tweet['text']).encode('utf8')
 		tweet_user_id = tweet['user']['id']
 		tweet_user_screen_name = tweet['user']['screen_name']
 		tweet_list = tweet_list + [[tweet_id,tweet_created_at,tweet_user_id,tweet_user_screen_name,tweet_text]]
@@ -156,7 +157,7 @@ def test_get_all_tweets():
 	print 'oauth successful !'
 
 	reset_file(config.TWEET_STORAGE_SHEET)
-	get_all_tweets('MayweatherPacquiao','2015-04-29','2015-05-08',oauth_list,config.TWEET_STORAGE_SHEET)
+	get_all_tweets('gameofthrones','2015-05-05','2015-05-13',oauth_list,config.TWEET_STORAGE_SHEET)
 	# tweets will come from 2015-04-27(incl) to exactly before 2015-05-03 
 	# please maintain the format 
 
