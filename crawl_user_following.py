@@ -49,7 +49,7 @@ def make_call(url_call,oauth):
 	while(not success):
 		try:
 			r = requests.get(url=url_call, auth=oauth)
-			if (r.status_code == 200 or r.status_code == 429 or r.status_code == 401):
+			if (r.status_code == 200 or r.status_code == 429 or r.status_code == 401 or r.status_code == 404):
 				success = True
 			else:
 				print str(strftime("%Y-%m-%d %H:%M:%S", gmtime())) + ' unknown code ! = '+ str(r.status_code)
@@ -64,36 +64,38 @@ def reset_file(filename):
 	with open(filename,'wb'):
 		pass
 
-def get_temporary_friendlist(url_call,oauth):
-	success = False
-	friend_list_id = []
-	next_cursor = -1
-	while(not success):	
-		r = make_call(url_call,oauth)
-		# print r
-		if (r.status_code == 200):
-			# call request successful
-			response_json = r.json()
-			friend_list_id = response_json['ids']
-			next_cursor = response_json['next_cursor']
-			# print 'next cursor = ',next_cursor
-			success = True
-		elif (r.status_code == 429):
-			print str(strftime("%Y-%m-%d %H:%M:%S", gmtime())) + 'rate limit exceeded waiting for reset'
-			wait_for_friends_list_reset(oauth)
-		elif (r.status_code == 401):
-			print str(strftime("%Y-%m-%d %H:%M:%S", gmtime())) + 'private user'
-			friend_list_id = []
-			next_cursor = 0
-			success = True
-		else:
-			# unknown status code
-			print ('unknown status code ! = ' + str(r.status_code))
-			wait_for_friends_list_reset(oauth)
-	# print 'next cursor = here',next_cursor
-	return (friend_list_id,next_cursor)
+# def get_temporary_friendlist(url_call,oauth):
+# 	success = False
+# 	friend_list_id = []
+# 	next_cursor = -1
+# 	while(not success):	
+# 		r = make_call(url_call,oauth)
+# 		# print r
+# 		if (r.status_code == 200):
+# 			# call request successful
+# 			response_json = r.json()
+# 			friend_list_id = response_json['ids']
+# 			next_cursor = response_json['next_cursor']
+# 			# print 'next cursor = ',next_cursor
+# 			success = True
+# 		elif (r.status_code == 429):
+# 			print str(strftime("%Y-%m-%d %H:%M:%S", gmtime())) + 'rate limit exceeded waiting for reset'
+# 			wait_for_friends_list_reset(oauth)
+# 		elif (r.status_code == 401):
+# 			print str(strftime("%Y-%m-%d %H:%M:%S", gmtime())) + 'private user'
+# 			friend_list_id = []
+# 			next_cursor = 0
+# 			success = True
+# 		else:
+# 			# unknown status code
+# 			print ('unknown status code ! = ' + str(r.status_code))
+# 			wait_for_friends_list_reset(oauth)
+# 	# print 'next cursor = here',next_cursor
+# 	return (friend_list_id,next_cursor)
+
 def get_time_string():
 	return str(strftime("%Y-%m-%d %H:%M:%S", gmtime())) + ' :'
+
 def get_temporary_friendlist_with_flag(url_call,oauth):
 	friend_list_id = []
 	next_cursor = -1
@@ -121,7 +123,7 @@ def get_temporary_friendlist_with_flag(url_call,oauth):
 		success_flag = True # do not repeat same call
 	else:
 		# unknown status code
-		print get_time_string() + 'unknown status code ! = ' + str(r.status_code)
+		print get_time_string() + 'unknown status code ! = ' + str(r.status_code) + ' **\n'
 		print url_call
 		print '***************\n'
 		print r.json()
