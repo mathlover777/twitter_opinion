@@ -32,7 +32,7 @@ def get_graph_raw(filename):
 			raw_graph[user_id_long] = follow_list_long
 
 	saveAsJson(raw_graph,'raw_graph.json')
-	saveAsJson(crawled_nodes,'crawled_nodes.json')
+	# saveAsJson(crawled_nodes,'crawled_nodes.json')
 	return raw_graph
 
 def get_graph_id_to_good_id_mapping(raw_graph):
@@ -238,21 +238,21 @@ def get_graph(filename):
 
 # get_graph_raw('user_follow_graph_backup.txt')
 
-def get_remaining_users_to_crawl():
-	crawled_nodes = loadJsonObject('crawled_nodes.json')
-	nodes_to_crawl = loadJsonObject('users_to_crawl.txt')
+# def get_remaining_users_to_crawl():
+# 	crawled_nodes = loadJsonObject('crawled_nodes.json')
+# 	nodes_to_crawl = loadJsonObject('users_to_crawl.txt')
 
-	crawled_set = set(crawled_nodes)
+# 	crawled_set = set(crawled_nodes)
 
 
-	remaining_to_crawl = []
+# 	remaining_to_crawl = []
 
-	for node_info in nodes_to_crawl:
-		node_id = node_info[0]
-		if int(node_id) not in crawled_set:
-			remaining_to_crawl = remaining_to_crawl + [node_info]
+# 	for node_info in nodes_to_crawl:
+# 		node_id = node_info[0]
+# 		if int(node_id) not in crawled_set:
+# 			remaining_to_crawl = remaining_to_crawl + [node_info]
 
-	saveAsJson(remaining_to_crawl,'users_to_crawl.txt')
+# 	saveAsJson(remaining_to_crawl,'users_to_crawl.txt')
 
 
 get_graph('user_follow_graph_backup.txt')

@@ -10,6 +10,8 @@ import csv
 import operator
 import json
 import random
+import sys
+from time import gmtime, strftime
 
 def get_resetinfo_friends_list(oauth):
 	url_call = config.BASE_URL+"/1.1/application/rate_limit_status.json?resources=friends"
@@ -50,10 +52,10 @@ def make_call(url_call,oauth):
 			if (r.status_code == 200 or r.status_code == 429 or r.status_code == 401):
 				success = True
 			else:
-				print ('unknown code ! = '+ str(r.status_code))
+				print str(strftime("%Y-%m-%d %H:%M:%S", gmtime())) + ' unknown code ! = '+ str(r.status_code)
 		except Exception as e:
 			print e
-			print ('request timed out waiting for ' + str(waittime) + ' seconds...')
+			print str(strftime("%Y-%m-%d %H:%M:%S", gmtime())) + ' request timed out waiting for ' + str(waittime) + ' seconds...'
 			time.sleep(waittime)
 			waittime = waittime + 2
 	return r
@@ -77,10 +79,10 @@ def get_temporary_friendlist(url_call,oauth):
 			# print 'next cursor = ',next_cursor
 			success = True
 		elif (r.status_code == 429):
-			print('rate limit exceeded waiting for reset')
+			print str(strftime("%Y-%m-%d %H:%M:%S", gmtime())) + 'rate limit exceeded waiting for reset'
 			wait_for_friends_list_reset(oauth)
 		elif (r.status_code == 401):
-			print('private user')
+			print str(strftime("%Y-%m-%d %H:%M:%S", gmtime())) + 'private user'
 			friend_list_id = []
 			next_cursor = 0
 			success = True
@@ -90,7 +92,8 @@ def get_temporary_friendlist(url_call,oauth):
 			wait_for_friends_list_reset(oauth)
 	# print 'next cursor = here',next_cursor
 	return (friend_list_id,next_cursor)
-
+def get_time_string():
+	return str(strftime("%Y-%m-%d %H:%M:%S", gmtime())) + ' :'
 def get_temporary_friendlist_with_flag(url_call,oauth):
 	friend_list_id = []
 	next_cursor = -1
@@ -106,19 +109,22 @@ def get_temporary_friendlist_with_flag(url_call,oauth):
 		# print 'next cursor = ',next_cursor
 
 	elif (r.status_code == 429):
-		print('rate limit exceeded waiting for reset waiting for 3 min before next call')
+		print get_time_string() + 'rate limit exceeded waiting for reset waiting for 3 min before next call'
 		time.sleep(180)
 		friend_list_id = []
 		next_cursor = 0
 		success_flag = False # if false call will be repeated
 	elif (r.status_code == 401):
-		print('private user')
+		print get_time_string() + 'private user'
 		friend_list_id = []
 		next_cursor = 0
 		success_flag = True # do not repeat same call
 	else:
 		# unknown status code
-		print ('unknown status code ! = ' + str(r.status_code))
+		print get_time_string() + 'unknown status code ! = ' + str(r.status_code)
+		print '***************\n'
+		print r.json()
+		print '***************\n'
 		friend_list_id = []
 		next_cursor = 0
 		success_flag = True # do not repeat same call
@@ -169,7 +175,7 @@ def loadJsonObject(filename):
 	with open(filename,'r') as fp:
 		return json.loads(fp.read())
 
-def get_follow_list():
+def get_follow_list(continue_flag = False):
 
 	config.init_app_config()
 	config.init_user_config()
@@ -184,8 +190,8 @@ def get_follow_list():
 
 	print 'oauth successful !'
 	
-
-	reset_file('data/user_follow_graph_backup.txt')
+	if(not continue_flag):
+		reset_file('data/user_follow_graph_backup.txt')
 
 	users_to_crawl = loadJsonObject('data/users_to_crawl.txt')
 	user_follow_graph = {}
@@ -207,4 +213,8 @@ def get_follow_list():
 			fp.write('\n')
 	saveAsJson(user_follow_graph,'data/user_follow_graph.txt')
 
-get_follow_list()
+argc = len(sys.argv)
+if(argc > 1):
+	get_follow_list(False) # continue
+else:
+	get_follow_list(True) # reset
