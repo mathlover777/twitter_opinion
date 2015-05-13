@@ -256,4 +256,4 @@ def get_graph(filename,tweet_file):
 
 	test_strongly_connected(scc_graph_true_id,raw_graph) # the test code ... may be disabled if required
 
-get_graph('data/user_follow_graph_backup.txt','data/tweets_mayweather.csv')
+get_graph('data/user_follow_graph_backup.txt','data/tweets.csv')

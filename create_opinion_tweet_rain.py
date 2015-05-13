@@ -71,5 +71,5 @@ def create_opinion_file_using_tweet_rain(tweet_file,output_file):
 	print 'bad tweets :',float(bad_count)/float(total_count) * 100.0
 	return
 
-create_opinion_file_using_tweet_rain('data/filtered_opinion.csv','data/opinion.txt')
+create_opinion_file_using_tweet_rain('data/filtered_opinion.csv','data/opinion_tweet_rain.txt')
 

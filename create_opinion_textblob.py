@@ -46,5 +46,5 @@ def create_opinion_file_using_textblob(tweet_file,output_file):
 				fp.write(str(user_id) + ' ' + str(timestamp) + ' ' + str(sentiment_score) + '\n')
 	return
 
-create_opinion_file_using_textblob('data/filtered_opinion.csv','data/opinion.txt')
+create_opinion_file_using_textblob('data/filtered_opinion.csv','data/opinion_textblob.txt')
 
