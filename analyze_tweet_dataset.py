@@ -38,8 +38,8 @@ def get_count_statistics(tweet_count):
 		already_counted = already_counted + number_of_users
 		cum_sorted_list = cum_sorted_list + [[count,already_counted]]
 
-	saveAsJson(sorted_list,'sorted_stat.txt') # sorted list has <tweet_count,user_count> sorted by tweet_count large to small
-	saveAsJson(cum_sorted_list,'cum_sorted_stat.txt') # the sorted list in cumulative manner
+	saveAsJson(sorted_list,'data/sorted_stat.txt') # sorted list has <tweet_count,user_count> sorted by tweet_count large to small
+	saveAsJson(cum_sorted_list,'data/cum_sorted_stat.txt') # the sorted list in cumulative manner
 
 def get_user_distribution(filename):
 	# print 'here'
@@ -60,17 +60,17 @@ def get_user_distribution(filename):
 				pass
 			else:
 				user_id_screen_name_mapping[tweet_user_id] = tweet_user_screen_name
-	saveAsJson(user_id_screen_name_mapping,'user_id_screen_name_mapping.txt') # <user_id,tweet_count>
+	saveAsJson(user_id_screen_name_mapping,'data/user_id_screen_name_mapping.txt') # <user_id,tweet_count>
 	user_id_screen_name_mapping = None
 	print 'total uniquie users = ',len(tweet_count),' out of total ',num_of_tweets,' tweets !'
 	sorted_tweet_count = sorted(tweet_count.items(), key=operator.itemgetter(1),reverse=True)
-	saveAsJson(sorted_tweet_count,'sorted_tweet_count.txt') # <user_id,tweet_count> sorted by tweet_count
+	saveAsJson(sorted_tweet_count,'data/sorted_tweet_count.txt') # <user_id,tweet_count> sorted by tweet_count
 	sorted_tweet_count = []
 	get_count_statistics(tweet_count)
 
 def get_users_to_crawl(min_tweet_count):
-	sorted_tweet_count = loadJsonObject('sorted_tweet_count.txt')
-	user_id_screen_name_mapping = loadJsonObject('user_id_screen_name_mapping.txt')
+	sorted_tweet_count = loadJsonObject('data/sorted_tweet_count.txt')
+	user_id_screen_name_mapping = loadJsonObject('data/user_id_screen_name_mapping.txt')
 	users_to_crawl = []
 	for user in sorted_tweet_count:
 		user_id = user[0]
@@ -80,7 +80,7 @@ def get_users_to_crawl(min_tweet_count):
 			# as list is already sorted in reverse does not need to go further
 			break
 		users_to_crawl = users_to_crawl + [(user_id,user_id_screen_name_mapping[user_id],user_tweet_count)]
-	saveAsJson(users_to_crawl,'users_to_crawl.txt')
+	saveAsJson(users_to_crawl,'data/users_to_crawl.txt')
 	print 'total '+str(len(users_to_crawl)) + ' users to crawl'
 	return users_to_crawl
 
